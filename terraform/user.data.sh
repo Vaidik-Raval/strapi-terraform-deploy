@@ -5,4 +5,4 @@ sudo yum install -y docker
 sudo systemctl start docker
 sudo systemctl enable docker
 sudo docker pull vaidikraval5/strapi-app:latest
-sudo docker run -d -p 1337:1337 --name strapi-app vaidikraval5/strapi-app:latest
+sudo docker run -d -p 1337:1337 ${docker_image}
