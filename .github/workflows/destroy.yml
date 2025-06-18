@@ -1,7 +1,9 @@
 name: Terraform Destroy
 
 on:
-  workflow_dispatch:  #Manual trigger
+  push:
+    branches:
+      - master
 
 jobs:
   destroy:
