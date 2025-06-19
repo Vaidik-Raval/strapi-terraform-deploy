@@ -4,12 +4,10 @@ FROM node:18
 WORKDIR /app
 
 # Copy package files first for better layer caching
-COPY package*.json ./
+COPY package*.json tsconfig.json ./
 
 # Install build tools required for native modules
-RUN apt-get update && \
-    apt-get install -y python3 g++ make && \
-    npm install --legacy-peer-deps
+RUN npm install 
 
 # Copy the rest of the application
 COPY . .
@@ -24,4 +22,4 @@ RUN npm run build
 EXPOSE 1337
 
 # Start Strapi
-CMD ["npm", "run", "develop"]
+CMD ["npm", "start"]

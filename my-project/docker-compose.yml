@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  strapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "1337:1337"
+    volumes:
+      - .:/app
+      - /app/node_modules  # Avoid overwriting node_modules
+    environment:
+      - NODE_ENV=development
+    command: ["npm", "start"]
