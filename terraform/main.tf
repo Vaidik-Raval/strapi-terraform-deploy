@@ -101,18 +101,37 @@ resource "aws_cloudwatch_dashboard" "strapi" {
     widgets = [
       {
         type = "metric",
-        x    = 0,
-        y    = 0,
-        width = 12,
+        x = 0,
+        y = 0,
+        width = 24,
         height = 6,
         properties = {
-          metrics = [
-            ["AWS/ECS", "CPUUtilization", "ServiceName", aws_ecs_service.strapi.name, "ClusterName", aws_ecs_cluster.strapi.name],
-            ["...", "MemoryUtilization", ".", ".", ".", "."]
-          ],
+          title = "ECS CPU & Memory Utilization",
+          view = "timeSeries",
+          stacked = false,
+          region = "us-east-1",
           period = 300,
-          stat   = "Average",
-          title  = "ECS Service CPU & Memory"
+          stat = "Average",
+          metrics = [
+            [ "AWS/ECS", "CPUUtilization", "ServiceName", "strapi-ecs-service", "ClusterName", "strapi-ecs-cluster", { "color": "#ff7f0e" } ],
+            [ ".", "MemoryUtilization", ".", ".", ".", ".", { "visible": false } ]
+          ]
+        }
+      },
+      {
+        type = "metric",
+        x = 0,
+        y = 6,
+        width = 24,
+        height = 6,
+        properties = {
+          title = "Memory Utilization Only",
+          view = "timeSeries",
+          stacked = false,
+          region = "us-east-1",
+          metrics = [
+            [ "AWS/ECS", "MemoryUtilization", "ServiceName", "strapi-ecs-service", "ClusterName", "strapi-ecs-cluster" ]
+          ]
         }
       }
     ]
