@@ -34,7 +34,7 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        docker build -t $ECR_REPO ./strapi-app
+        docker build -t $ECR_REPO ./my-project
         docker tag $ECR_REPO:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
         docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
 
