@@ -82,20 +82,16 @@ resource "aws_ecs_service" "strapi" {
   name            = var.project_name
   cluster         = aws_ecs_cluster.strapi.id
   task_definition = aws_ecs_task_definition.strapi.arn
-  desired_count   = 1
-
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-  }
+  launch_type     = "FARGATE"
 
   network_configuration {
     subnets         = [aws_subnet.subnet.id]
     security_groups = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
-}
 
+  desired_count = 1
+}
 
 # Optional CloudWatch Dashboard (for monitoring)
 resource "aws_cloudwatch_dashboard" "strapi" {
