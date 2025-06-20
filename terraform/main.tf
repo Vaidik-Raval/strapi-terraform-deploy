@@ -136,7 +136,7 @@ resource "aws_cloudwatch_dashboard" "strapi" {
           period = 300,
           stat = "Average",
           metrics = [
-            [ "AWS/ECS", "CPUUtilization", "ServiceName", "strapi-ecs-service", "ClusterName", "strapi-ecs-cluster", { "color": "#ff7f0e" } ],
+            [ "AWS/ECS", "CPUUtilization", "ServiceName", var.project_name, "ClusterName", var.project_name, { "color": "#ff7f0e" } ],
             [ ".", "MemoryUtilization", ".", ".", ".", ".", { "visible": false } ]
           ]
         }
@@ -153,10 +153,11 @@ resource "aws_cloudwatch_dashboard" "strapi" {
           stacked = false,
           region = "us-east-1",
           metrics = [
-            [ "AWS/ECS", "MemoryUtilization", "ServiceName", "strapi-ecs-service", "ClusterName", "strapi-ecs-cluster" ]
+            [ "AWS/ECS", "MemoryUtilization", "ServiceName", var.project_name, "ClusterName", var.project_name ]
           ]
         }
       }
     ]
   })
 }
+
