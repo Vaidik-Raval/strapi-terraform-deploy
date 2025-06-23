@@ -10,7 +10,7 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REPO: strapi-app
-  AWS_ACCOUNT_ID: 607700977843
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_IDA }}
 
 jobs:
   deploy:

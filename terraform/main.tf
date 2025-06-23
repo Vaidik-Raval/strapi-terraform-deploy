@@ -32,10 +32,6 @@ resource "aws_security_group" "ecs_sg" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name              = "/ecs/strapi"
-  retention_in_days = 7
-}
 
 resource "aws_ecs_cluster" "strapi" {
   name = var.project_name
@@ -58,14 +54,6 @@ resource "aws_ecs_task_definition" "strapi" {
       containerPort = 1337
       hostPort      = 1337
     }]
-    logConfiguration = {
-      logDriver = "awslogs",
-      options = {
-        awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name
-        awslogs-region        = "us-east-1"
-        awslogs-stream-prefix = "ecs/strapi"
-      }
-    }
   }])
 }
 
@@ -114,50 +102,4 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-
-
-# Optional CloudWatch Dashboard (for monitoring)
-resource "aws_cloudwatch_dashboard" "strapi" {
-  dashboard_name = "StrapiMonitoring"
-
-  dashboard_body = jsonencode({
-    widgets = [
-      {
-        type = "metric",
-        x = 0,
-        y = 0,
-        width = 24,
-        height = 6,
-        properties = {
-          title = "ECS CPU & Memory Utilization",
-          view = "timeSeries",
-          stacked = false,
-          region = "us-east-1",
-          period = 300,
-          stat = "Average",
-          metrics = [
-            [ "AWS/ECS", "CPUUtilization", "ServiceName", var.project_name, "ClusterName", var.project_name, { "color": "#ff7f0e" } ],
-            [ ".", "MemoryUtilization", ".", ".", ".", ".", { "visible": false } ]
-          ]
-        }
-      },
-      {
-        type = "metric",
-        x = 0,
-        y = 6,
-        width = 24,
-        height = 6,
-        properties = {
-          title = "Memory Utilization Only",
-          view = "timeSeries",
-          stacked = false,
-          region = "us-east-1",
-          metrics = [
-            [ "AWS/ECS", "MemoryUtilization", "ServiceName", var.project_name, "ClusterName", var.project_name ]
-          ]
-        }
-      }
-    ]
-  })
-}
 
