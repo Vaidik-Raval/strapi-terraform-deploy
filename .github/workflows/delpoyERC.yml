@@ -1,48 +1,48 @@
-name: CI/CD for Strapi with Auto-Destroy
+# name: CI/CD for Strapi with Auto-Destroy
 
-on:
-  push:
-    branches: 
-      - master
-  schedule:
-    - cron: '*/15 * * * *'  # every 15 mins — adjust if needed
+# on:
+#   push:
+#     branches: 
+#       - master
+#   schedule:
+#     - cron: '*/15 * * * *'  # every 15 mins — adjust if needed
 
-env:
-  AWS_REGION: us-east-1
-  ECR_REPO: strapi-app
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_IDA }}
+# env:
+#   AWS_REGION: us-east-1
+#   ECR_REPO: strapi-app
+#   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_IDA }}
 
-jobs:
-  deploy:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+# jobs:
+#   deploy:
+#     if: github.event_name == 'push'
+#     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+#     - name: Configure AWS credentials
+#       uses: aws-actions/configure-aws-credentials@v2
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Login to Amazon ECR
-      run: |
-        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+#     - name: Login to Amazon ECR
+#       run: |
+#         aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
     
-    - name: Ensure ECR repository exists
-      run: |
-        aws ecr describe-repositories --repository-names $ECR_REPO || \
-        aws ecr create-repository --repository-name $ECR_REPO
+#     - name: Ensure ECR repository exists
+#       run: |
+#         aws ecr describe-repositories --repository-names $ECR_REPO || \
+#         aws ecr create-repository --repository-name $ECR_REPO
 
 
-    - name: Build and push Docker image
-      run: |
-        docker build -t $ECR_REPO ./strapi-app
-        docker tag $ECR_REPO:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
-        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
+#     - name: Build and push Docker image
+#       run: |
+#         docker build -t $ECR_REPO ./strapi-app
+#         docker tag $ECR_REPO:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
+#         docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
 
     
 
