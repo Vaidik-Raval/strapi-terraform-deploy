@@ -1,3 +1,6 @@
+resource "aws_ecr_repository" "strapi" {
+  name = var.project_name
+}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
