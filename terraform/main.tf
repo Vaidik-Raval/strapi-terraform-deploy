@@ -1,7 +1,3 @@
-# main.tf
-provider "aws" {
-  region = "us-east-1"
-}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
@@ -73,6 +69,9 @@ resource "aws_security_group" "ecs_sg" {
   }
 }
 
+
+
+
 data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
 }
@@ -82,62 +81,11 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+
 resource "aws_ecs_cluster" "strapi_cluster" {
   name = "strapi-cluster"
 }
 
-resource "aws_lb" "strapi_alb" {
-  name               = "strapi-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.ecs_sg.id]
-  subnets            = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
-}
-
-resource "aws_lb_target_group" "blue" {
-  name        = "strapi-target-group-blue"
-  port        = 1337
-  protocol    = "HTTP"
-  target_type = "ip"
-  vpc_id      = aws_vpc.main.id
-
-  health_check {
-    path                = "/"
-    matcher             = "200"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
-}
-
-resource "aws_lb_target_group" "green" {
-  name        = "strapi-target-group-green"
-  port        = 1337
-  protocol    = "HTTP"
-  target_type = "ip"
-  vpc_id      = aws_vpc.main.id
-
-  health_check {
-    path                = "/"
-    matcher             = "200"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.strapi_alb.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.blue.arn
-  }
-}
 
 resource "aws_ecs_task_definition" "strapi_task" {
   family                   = "strapi"
@@ -150,7 +98,7 @@ resource "aws_ecs_task_definition" "strapi_task" {
   container_definitions = jsonencode([
     {
       name      = "strapi"
-      image     = "strapi/strapi"
+      image     = "${aws_ecr_repository.strapi.repository_url}:latest"
       essential = true
       portMappings = [
         {
@@ -163,19 +111,6 @@ resource "aws_ecs_task_definition" "strapi_task" {
   ])
 }
 
-data "aws_iam_role" "codedeploy_service_role" {
-  name = "CodeDeployServiceRole"
-}
-
-resource "aws_iam_role_policy_attachment" "codedeploy_policy" {
-  role       = data.aws_iam_role.codedeploy_service_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/CodeDeployServiceRole"
-}
-
-resource "aws_codedeploy_app" "strapi_app" {
-  name             = "strapi-codedeploy-app"
-  compute_platform = "ECS"
-}
 
 resource "aws_ecs_service" "strapi_service" {
   name            = "strapi-service-blue"
@@ -201,51 +136,4 @@ resource "aws_ecs_service" "strapi_service" {
   }
 
   depends_on = [aws_lb_listener.http]
-}
-
-resource "aws_codedeploy_deployment_group" "strapi_deploy_group" {
-  app_name               = aws_codedeploy_app.strapi_app.name
-  deployment_group_name = "strapi-deployment-group"
-  service_role_arn       = data.aws_iam_role.codedeploy_service_role.arn
-  deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
-
-  auto_rollback_configuration {
-    enabled = true
-    events  = ["DEPLOYMENT_FAILURE"]
-  }
-  deployment_style {
-    deployment_type   = "BLUE_GREEN"
-    deployment_option = "WITH_TRAFFIC_CONTROL"
-  }
-
-  blue_green_deployment_config {
-    terminate_blue_instances_on_deployment_success {
-      action                              = "TERMINATE"
-      termination_wait_time_in_minutes    = 5
-    }
-
-    deployment_ready_option {
-      action_on_timeout = "CONTINUE_DEPLOYMENT"
-    }
-  }
-
-  ecs_service {
-    cluster_name = aws_ecs_cluster.strapi_cluster.name
-    service_name = aws_ecs_service.strapi_service.name
-  }
-
-  load_balancer_info {
-    target_group_pair_info {
-      target_group {
-        name = aws_lb_target_group.blue.name
-      }
-      target_group {
-        name = aws_lb_target_group.green.name
-      }
-
-      prod_traffic_route {
-        listener_arns = [aws_lb_listener.http.arn]
-      }
-    }
-  }
 }
