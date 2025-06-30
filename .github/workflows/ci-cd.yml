@@ -56,7 +56,6 @@ jobs:
       run: |
         cd terraform
         terraform import aws_ecr_repository.strapi strapi-app || echo "ECR repo already managed or not needed"
-        terraform import aws_cloudwatch_log_group.ecs_logs /ecs/strapi || echo "CloudWatch log group already managed or not needed"
         terraform import aws_iam_role.ecs_task_exec ecsTaskExecutionRole || echo "IAM role already managed or not needed"
       
     - name: Terraform Apply

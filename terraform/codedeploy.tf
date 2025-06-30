@@ -4,7 +4,7 @@ data "aws_iam_role" "codedeploy_service_role" {
 
 resource "aws_iam_role_policy_attachment" "codedeploy_policy" {
   role       = data.aws_iam_role.codedeploy_service_role.name
-  policy_arn = "arn:aws:iam::aws:policy/CodeDeployServiceRole"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/CodeDeployServiceRole"
 }
 
 resource "aws_codedeploy_app" "strapi_app" {
