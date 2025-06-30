@@ -169,7 +169,7 @@ data "aws_iam_role" "codedeploy_service_role" {
 
 resource "aws_iam_role_policy_attachment" "codedeploy_policy" {
   role       = data.aws_iam_role.codedeploy_service_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForECS"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/CodeDeployServiceRole"
 }
 
 resource "aws_codedeploy_app" "strapi_app" {
@@ -212,6 +212,10 @@ resource "aws_codedeploy_deployment_group" "strapi_deploy_group" {
   auto_rollback_configuration {
     enabled = true
     events  = ["DEPLOYMENT_FAILURE"]
+  }
+  deployment_style {
+    deployment_type   = "BLUE_GREEN"
+    deployment_option = "WITH_TRAFFIC_CONTROL"
   }
 
   blue_green_deployment_config {
