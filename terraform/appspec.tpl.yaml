@@ -1,0 +1,60 @@
+# appspec.tpl.yaml
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: "__TASK_DEFINITION_ARN__"
+        LoadBalancerInfo:
+          ContainerName: strapi
+          ContainerPort: 1337
+
+# variables.tf
+variable "aws_region"{
+  default = "us-east-1"
+}
+
+variable "aws_account_id" {
+  description = "Your AWS Account ID"
+  type        = string
+}
+
+variable "ecr_repo" {
+  default = "strapi-app"
+}
+
+variable "alb_listener_arn" {
+  description = "ARN of the ALB listener"
+  type        = string
+}
+
+variable "target_group_blue_arn" {
+  description = "ARN of the blue target group"
+  type        = string
+}
+
+variable "target_group_green_arn" {
+  description = "ARN of the green target group"
+  type        = string
+}
+
+variable "ecs_cluster_name" {
+  default = "strapi-cluster"
+}
+
+variable "ecs_service_name" {
+  default = "strapi-service"
+}
+
+variable "s3_bucket" {
+  description = "S3 bucket for appspec.yaml"
+  type        = string
+}
+
+variable "codedeploy_app_name" {
+  default = "strapi-codedeploy-app"
+}
+
+variable "codedeploy_group_name" {
+  default = "strapi-deployment-group"
+}

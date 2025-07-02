@@ -1,0 +1,68 @@
+name: Deploy Strapi App with CodeDeploy
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO: strapi-app
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      run: |
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+    - name: Build and Push Docker image
+      run: |
+        docker build -t $ECR_REPO ./strapi-app
+        docker tag $ECR_REPO:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:${{ github.sha }}
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:${{ github.sha }}
+
+    - name: Render ECS Task Definition
+      id: render-task
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: strapi
+        image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ github.sha }}
+
+    - name: Register New Task Definition
+      id: register-task
+      run: |
+        echo "Registering task definition..."
+        TASK_DEF_PATH="${{ steps.render-task.outputs.task-definition }}"
+        TASK_DEF_ARN=$(aws ecs register-task-definition --cli-input-json file://$TASK_DEF_PATH | jq -r '.taskDefinition.taskDefinitionArn')
+        echo "task_def_arn=$TASK_DEF_ARN" >> $GITHUB_OUTPUT
+
+    - name: Replace Task Definition ARN in AppSpec
+      run: |
+        sed "s|__TASK_DEFINITION_ARN__|${{ steps.register-task.outputs.task_def_arn }}|" appspec.yaml > rendered-appspec.yaml
+
+    - name: Upload AppSpec to S3
+      run: aws s3 cp appspec.yaml s3://${{ secrets.S3_BUCKET_NAME }}/appspec.yaml --region us-east-1
+
+
+    - name: Trigger CodeDeploy Deployment
+      run: |
+        aws deploy create-deployment \
+          --application-name strapi-codedeploy-app \
+          --deployment-group-name strapi-deployment-group \
+          --deployment-config-name CodeDeployDefault.ECSAllAtOnce \
+          --s3-location bucket=your-s3-bucket-name,key=appspec.yaml,bundleType=YAML \
+          --description "Deployed via GitHub Actions - Commit ${{ github.sha }}"
