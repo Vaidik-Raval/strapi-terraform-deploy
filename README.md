@@ -74,8 +74,7 @@ This repository demonstrates the **deployment of a Strapi application on AWS ECS
 
 ### **1. Clone Repository**
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
+git clone[ https://github.com/Vaidik-Raval/strapi-terraform-deploy.git
 ```
 
 ### **2. Setup Environment Variables**  
